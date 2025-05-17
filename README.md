@@ -14,6 +14,7 @@ skibidi bop mm yes giga chad music player & downloader. open html. get music. be
 > **pro tip:** install nothing. click things. ascend to sigma.
 
 ---
+JUST MOOOOREEEE SIGMAAAAAAAAA
 
 ## 🧠 Authors
 
