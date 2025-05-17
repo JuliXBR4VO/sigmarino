@@ -1,0 +1,1027 @@
+
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>mxs</title>
+  <link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<!DOCTYPE html>
+<html lang="en">
+<!--
+Original Developer: wiz64
+Contribute: https://github.com/wiz64/saavn-web-ui
+UI Upgrade by JuliXBR4VO
+-->
+<head>
+      <button id="darkmode-toggle" style="position: absolute; top: 20px; left: 20px; z-index: 100; background: #fffb00; color: #ff00ff; font-family: 'Comic Sans MS', cursive; border: 3px solid #ff00ff; border-radius: 20px; font-size: 1.1em; padding: 0.5em 1.2em; box-shadow: 0 0 10px #ff00ff;">
+        DARKMODE: OFF
+      </button>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+  <title>Saverino</title>
+  <meta name="description" content="Saverino Music Player is an Ad-Free Music Player, High Quality MP3 Songs with Metadata support, and a Modern Design. A large library of songs. developed by wiz64">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #1DB954;
+      --secondary-color: #1AA34A;
+      --dark-bg: #121212;
+      --card-bg: #181818;
+      --text-primary: #ffffff;
+      --text-secondary: #b3b3b3;
+      --hover-bg: #282828;
+      --border-radius: 8px;
+      --box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      --transition-speed: 0.3s;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--dark-bg);
+      color: var(--text-primary);
+      padding-bottom: 100px;
+      line-height: 1.6;
+    }
+    
+    /* Loading Animation */
+    .loader-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(18, 18, 18, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      backdrop-filter: blur(5px);
+    }
+    .loader {
+      width: 50px;
+      height: 50px;
+      border: 3px solid var(--text-secondary);
+      border-radius: 50%;
+      border-top-color: var(--primary-color);
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    
+    /* Improved Fullscreen Player */
+    .fullscreen-player {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      /* Default fallback background */
+      background: linear-gradient(135deg, rgba(18, 18, 18, 0.95), rgba(40, 40, 40, 0.95));
+      z-index: 2000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+      overflow: hidden;
+    }
+    
+    /* The blurred album cover background */
+    .fullscreen-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      filter: blur(20px);
+      z-index: -1;
+      transform-origin: center;
+      animation: bgAnimation 30s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+    
+    /* Animation für den Fullscreen-Hintergrund */
+    @keyframes bgAnimation {
+      0% {
+        transform: scale(1.05) rotate(0deg);
+      }
+      25% {
+        transform: scale(1.07) rotate(0.5deg);
+      }
+      50% {
+        transform: scale(1.1) rotate(1deg);
+      }
+      75% {
+        transform: scale(1.07) rotate(0.5deg);
+      }
+      100% {
+        transform: scale(1.05) rotate(0deg);
+      }
+    }
+    
+    .fullscreen-player.active {
+      display: flex;
+      animation: fadeInPlayer 0.4s ease-out forwards;
+    }
+    
+    @keyframes fadeInPlayer {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    
+    .cover-wrapper {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin-bottom: 40px;
+      overflow: visible; /* Erlaubt sichtbare Überlagerung */
+      perspective: 1000px;
+    }
+    
+    .vinyl-disc {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 290px;
+      height: 290px;
+      background: radial-gradient(circle at center, 
+        #000000 0%, 
+        #333333 35%, 
+        #000000 35.5%,
+        #333333 36%,
+        #000000 36.5%,
+        #333333 37%,
+        #000000 37.5%,
+        #333333 38%,
+        #000000 38.5%
+      );
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 0;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      will-change: transform, opacity;
+    }
+    
+    /* Entfernen der alten Vinyl-Markierungen */
+    /* Neue realistischere Vinyl-Markierungen */
+    .vinyl-disc::before {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      background: 
+        radial-gradient(circle at 75% 25%, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.6) 2px, transparent 3px),
+        radial-gradient(circle at 25% 75%, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.6) 2px, transparent 3px),
+        radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.6) 2px, transparent 3px),
+        radial-gradient(circle at 85% 50%, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.6) 2px, transparent 3px),
+        radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.6) 2px, transparent 3px),
+        radial-gradient(circle at 50% 90%, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.6) 2px, transparent 3px);
+    }
+    
+    /* Vinyl-Mittelloch */
+    .vinyl-disc::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 30px;
+      height: 30px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    }
+    
+    .fullscreen-player.playing .vinyl-disc {
+      opacity: 1;
+      animation: spinDisc 4s linear infinite;
+    }
+    
+    .fullscreen-cover {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      margin-bottom: 30px;
+      transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 1;
+      will-change: transform;
+    }
+    
+    .fullscreen-player.playing .fullscreen-cover {
+      transform: translateX(-40%) rotate(-2deg);
+    }
+    
+    .fullscreen-info {
+      text-align: center;
+      margin-bottom: 30px;
+      width: 80%;
+      max-width: 400px;
+      animation: fadeInUp 0.5s ease-out 0.2s both;
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .fullscreen-title {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: white;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    
+    .fullscreen-artist {
+      font-size: 20px;
+      color: var(--primary-color);
+      margin-bottom: 5px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+    
+    .fullscreen-album {
+      font-size: 16px;
+      color: var(--text-secondary);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+    
+    .fullscreen-controls {
+      width: 80%;
+      max-width: 400px;
+      background: rgba(0, 0, 0, 0.45);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      animation: fadeInUp 0.5s ease-out 0.3s both;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 3px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .progress-bar:hover {
+      height: 8px;
+      background: rgba(255,255,255,0.25);
+    }
+    
+    .progress {
+      width: 0%;
+      height: 100%;
+      background: var(--primary-color);
+      border-radius: 3px;
+      position: absolute;
+      transition: width 0.1s linear;
+      box-shadow: 0 0 8px var(--primary-color);
+    }
+    
+    .time-info {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-primary);
+      font-size: 14px;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    
+    .control-buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 30px;
+    }
+    
+    .control-btn {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .control-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .control-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    #play-pause-btn {
+      font-size: 30px;
+      background: var(--primary-color);
+      width: 60px;
+      height: 60px;
+      box-shadow: 0 4px 12px rgba(29, 185, 84, 0.4);
+    }
+    
+    #play-pause-btn:hover {
+      transform: scale(1.1) translateY(-2px);
+      background: var(--secondary-color);
+      box-shadow: 0 6px 16px rgba(29, 185, 84, 0.5);
+    }
+    
+    #play-pause-btn:active {
+      transform: scale(1.05) translateY(1px);
+    }
+    
+    .close-fullscreen {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .close-fullscreen:hover {
+      background: rgba(255,255,255,0.2);
+      transform: rotate(90deg);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    
+    @keyframes spinDisc {
+      from {
+        transform: translate(-50%, -50%) rotate(0deg);
+      }
+      to {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
+    }
+    
+    /* Downloads Popup Upgrade */
+    .mpopup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+      z-index: 1500;
+    }
+    
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 20px;
+      color: var(--text-primary);
+      max-width: 800px;
+      margin: 30px auto;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+      animation: modalSlideIn 0.3s ease;
+    }
+    
+    @keyframes modalSlideIn {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .modal-header {
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 15px;
+    }
+    
+    .close {
+      color: var(--text-primary);
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    
+    .close:hover {
+      transform: rotate(90deg);
+    }
+    
+    #download-list li {
+      display: flex;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      transition: transform 0.3s ease;
+    }
+    
+    #download-list li:hover {
+      transform: translateX(10px);
+    }
+    
+    #download-list img {
+      border-radius: 10px;
+      margin-right: 15px;
+    }
+    
+    /* Original styles for the rest of the page */
+    .header-dark {
+      background: linear-gradient(135deg, rgba(29, 185, 84, 0.8), rgba(26, 163, 74, 0.8));
+      padding: 40px 0 80px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 0;
+      margin-bottom: -40px;
+    }
+
+    .header-dark::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('assets/img/1280821.png') center/cover;
+      opacity: 0.1;
+      z-index: 0;
+    }
+
+    .header-dark .container {
+      position: relative;
+      z-index: 1;
+    }
+
+    .header-dark h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(90deg, #fff, rgba(255,255,255,0.8));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-dark h3 {
+      font-size: 1.5rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+
+    /* Search section redesign */
+    .search-section {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 30px;
+      margin-top: -40px;
+      box-shadow: var(--box-shadow);
+      position: relative;
+      z-index: 2;
+    }
+
+    .search-container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    #saavn-bitrate {
+      background: var(--hover-bg);
+      border: none;
+      border-radius: 8px;
+      color: var(--text-primary);
+      padding: 8px 16px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      width: auto;
+      transition: all var(--transition-speed) ease;
+    }
+
+    #saavn-bitrate:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .input-group {
+      background: var(--hover-bg);
+      border-radius: 50px;
+      padding: 5px;
+    }
+
+    #saavn-search-box {
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 16px;
+      padding: 12px 20px;
+    }
+
+    #saavn-search-box::placeholder {
+      color: var(--text-secondary);
+    }
+
+    #saavn-search-box:focus {
+      outline: none;
+      box-shadow: none;
+    }
+
+    #saavn-search-trigger {
+      margin: 4px;
+      padding: 10px 24px;
+      font-weight: 500;
+    }
+
+    .search-toggle-container {
+      margin-top: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .search-toggle {
+      background: var(--hover-bg);
+      border: none;
+      border-radius: 50px;
+      color: var(--text-secondary);
+      padding: 8px 16px;
+      font-size: 14px;
+      transition: all var(--transition-speed) ease;
+    }
+
+    .search-toggle:hover {
+      background: var(--primary-color);
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    /* Mini-player redesign */
+    #audio-player {
+      background: rgba(18, 18, 18, 0.95);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 1000;
+    }
+
+    #audio-player .image-container {
+      position: relative;
+      width: 60px;
+      height: 60px;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform var(--transition-speed) ease;
+    }
+
+    #audio-player .image-container:hover {
+      transform: scale(1.05);
+    }
+
+    #audio-player #player-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #audio-player .player-info {
+      margin-left: 15px;
+    }
+
+    #player-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    #player-album {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    /* Audio player controls */
+    audio::-webkit-media-controls-panel {
+      background: var(--card-bg) !important;
+    }
+
+    audio::-webkit-media-controls-play-button {
+      background-color: var(--primary-color);
+      border-radius: 50%;
+    }
+
+    audio::-webkit-media-controls-current-time-display,
+    audio::-webkit-media-controls-time-remaining-display {
+      color: var(--text-primary);
+    }
+
+    audio::-webkit-media-controls-timeline {
+      background-color: var(--hover-bg);
+    }
+
+    /* Download popup redesign */
+    .float-button {
+      position: fixed;
+      bottom: 100px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      background: var(--primary-color);
+      border-radius: 50%;
+      box-shadow: var(--box-shadow);
+      z-index: 1000;
+      transition: all var(--transition-speed) ease;
+    }
+
+    .float-button:hover {
+      transform: scale(1.1);
+      background: var(--secondary-color);
+    }
+
+    .float-button a {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+    }
+
+    .mpopup {
+      backdrop-filter: blur(10px);
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 20px;
+    }
+
+    .modal-header h2 {
+      color: var(--text-primary);
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    #download-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    #download-list li {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      background: var(--hover-bg);
+      transition: all var(--transition-speed) ease;
+    }
+
+    #download-list li:hover {
+      transform: translateX(5px);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    #download-list .track-img {
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      margin-right: 15px;
+    }
+
+    #download-list .track-info {
+      flex: 1;
+    }
+
+    .track-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .track-album {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .track-status {
+      margin-left: auto;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 12px;
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .track-status a {
+      color: white;
+      text-decoration: none;
+    }
+
+    .modal-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Loading Animation -->
+  <div class="loader-container">
+    <div class="loader"></div>
+  </div>
+
+  <header class="header-dark">
+    <nav class="navbar navbar-dark navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="#">
+          <i class="fas fa-music me-2"></i>
+          Saverino
+        </a>
+        <button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-1">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navcol-1">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="btn btn-primary" role="button" href="https://github.com/wiz64/saavn-web-ui" target="_blank">
+                <i class="fab fa-github me-2"></i>Github
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container text-center">
+      <h1 style="font-size:4rem; font-family: 'Comic Sans MS', 'Comic Sans', cursive; color: #ff00ff; text-shadow: 2px 2px 0 #00ffea, 4px 4px 0 #fffb00;">SAVERINO GIGA CHAD</h1>
+      <h3 style="font-size:2rem; color:#fffb00; font-family: Impact, fantasy; text-shadow: 1px 1px 0 #ff00ff;">skibidi music blaster 9000</h3>
+      <p style="color:#fff; font-size:1.2rem; background: #ff00ff; display:inline-block; padding: 0.5em 1em; border-radius: 20px; margin-top: 1em; font-family: 'Comic Sans MS', cursive;">no ads, just pure sigma music. click stuff. become legend.</p>
+      <div style="margin-top:1em;">
+        <span style="background:#fffb00; color:#ff00ff; padding:0.3em 0.8em; border-radius:12px; font-weight:bold; font-size:1.1em;">WARNING: put ALL files in ONE folder or you get 0 bitches</span>
+      </div>
+    </div>
+  </header>
+  
+  <div class="container">
+    <!-- Improved Search Section -->
+    <div class="search-section">
+      <div class="search-container">
+      <!-- BRAINROT BITRATE SELECTOR -->
+      <div class="text-center mb-3">
+        <div class="bitrate-selector" style="font-family: 'Comic Sans MS', cursive; color: #ff00ff;">
+          <span class="bitrate-label" style="font-size:1.1em;">choose bitrate (higher = more giga):</span>
+          <select id="saavn-bitrate" class="form-select-sm" aria-label="choose your giga bitrate" style="background:#fffb00; color:#ff00ff; font-weight:bold;">
+            <option value="4">320kbps (GIGA HD)</option>
+            <option value="3" selected>160kbps (pretty chad)</option>
+            <option value="2">96kbps (mid)</option>
+            <option value="1">48kbps (skill issue)</option>
+          </select>
+        </div>
+      </div>
+      <!-- BRAINROT SEARCH BAR -->
+      <form class="search-form" action="#" method="get" role="search">
+        <div class="search-input-group" style="border: 3px solid #ff00ff; border-radius: 30px; background: #fffb00;">
+          <div class="search-icon">
+            <i class="fas fa-search" style="color:#ff00ff;"></i>
+          </div>
+          <input 
+            class="form-control" 
+            type="search" 
+            id="saavn-search-box" 
+            placeholder="type song, artist, or just smash your keyboard..." 
+            aria-label="search for sigma music"
+            autocomplete="off"
+            autofocus
+            style="background:transparent; color:#ff00ff; font-family:'Comic Sans MS',cursive; font-size:1.1em;"
+          >
+          <button 
+            class="btn btn-primary search-button" 
+            id="saavn-search-trigger" 
+            type="submit" 
+            onclick="SaavnSearch()"
+            aria-label="search"
+            style="background:#ff00ff; color:#fffb00; font-weight:bold; border-radius:20px; border:none; margin-left:8px;"
+          >
+            <span class="search-button-text">FIND BANGER</span>
+            <i class="fas fa-search search-button-icon"></i>
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-clear" 
+            id="clear-search" 
+            aria-label="clear search"
+            style="background:#fffb00; color:#ff00ff; border-radius:20px; border:none; margin-left:8px;"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <!-- BRAINROT SEARCH HELP -->
+        <div class="search-help" style="margin-top:0.5em;">
+          <span class="keyboard-shortcut" title="press '/' to search" style="color:#ff00ff; font-family:'Comic Sans MS',cursive; font-size:1em;"><i class="fas fa-keyboard"></i> press <kbd>/</kbd> to giga-search</span>
+          <span class="search-status" id="search-status"></span>
+        </div>
+      </form>
+      <div class="search-history" id="search-history">
+        <!-- search history here -->
+      </div>
+      <div class="search-toggle-container">
+        <!-- Quick search buttons will be added here by JavaScript -->
+      </div>
+    </div>
+    </div>
+    
+    <div id="saavn-results" class="mb-4">
+      <h5 class="text-center mb-4" style="font-family:'Comic Sans MS',cursive; color:#ff00ff; font-size:2em; text-shadow:2px 2px 0 #fffb00;">🔥 GIGA SONGS FOR GIGA CHADS 🔥</h5>
+    </div>
+    
+    <div class="text-center mb-4">
+      <button id="loadmore" class="btn" style="background:#ff00ff; color:#fffb00; font-family:'Comic Sans MS',cursive; font-size:1.2em; border-radius:20px; border:3px solid #fffb00;">
+  <i class="fas fa-sync-alt me-2"></i>LOAD MORE BANGERS
+</button>
+    </div>
+    
+    <div class="button-container">
+      <!-- Buttons will be added by JavaScript -->
+    </div>
+    
+    <p class="footer text-center">
+      This content is not affiliated with, endorsed, sponsored, or specifically approved by any third party music provider like Gaana, Saavn, Spotfy, and is not responsible for any copyright material.[...]
+      We don't serve any music on our servers.<br><br>
+      Originally by wiz64.<br>
+      Re-Designed by JuliXBR4VO
+    </p>
+  </div>
+  
+  <!-- Improved Fullscreen Player -->
+  <div class="fullscreen-player">
+    <div class="fullscreen-bg"></div>
+    <div class="close-fullscreen">
+        <i class="fas fa-times"></i>
+    </div>
+    <div class="cover-wrapper">
+        <div class="vinyl-disc"></div>
+        <img class="fullscreen-cover" src="" alt="Album Cover">
+    </div>
+    <div class="fullscreen-info">
+        <h2 class="fullscreen-title"></h2>
+        <p class="fullscreen-artist"></p>
+        <p class="fullscreen-album"></p>
+    </div>
+    <div class="fullscreen-controls">
+        <div class="progress-bar">
+            <div class="progress"></div>
+        </div>
+        <div class="time-info">
+            <span class="current-time">0:00</span>
+            <span class="total-time">0:00</span>
+        </div>
+        <div class="control-buttons">
+            <button class="control-btn" id="prev-btn">
+                <i class="fas fa-backward"></i>
+            </button>
+            <button class="control-btn" id="play-pause-btn">
+                <i class="fas fa-play"></i>
+            </button>
+            <button class="control-btn" id="next-btn">
+                <i class="fas fa-forward"></i>
+            </button>
+        </div>
+    </div>
+  </div>
+
+  <div id="audio-player">
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <div class="image-container">
+          <div class="image-placeholder">
+            <i class="fas fa-music" style="font-size: 24px; color: var(--primary-color);"></i>
+          </div>
+          <img class="img-fluid lazy-image" id="player-image" style="height: 75px;width: 75px;" data-src="https://i.pinimg.com/originals/ed/54/d2/ed54d2fa700d36d4f2671e1be84651df.jpg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" loading="lazy">
+        </div>
+      </div>
+      <div class="col">
+        <div class="mb-1">
+          <span id="player-name" class="d-inline-block text-truncate" style="max-width: 90%">Song</span>
+          <span id="player-album" class="d-block text-truncate" style="max-width: 90%">Album</span>
+        </div>
+        <audio id="player" controls="controls" controlsList="nodownload" style="width: 100%;height: 30px;">
+          <source id="audioSource" src="">
+          Your browser does not support the audio format.
+        </audio>
+      </div>
+    </div>
+  </div>
+  
+  <!-- floating downloader popup -->
+  <div class="float-button">
+    <a href="javascript:void(0);" class="btn" id="mpopupLink">
+      <i class="fas fa-download"></i>
+    </a>
+  </div>
+  
+  <!-- Modal popup box -->
+  <div id="mpopupBox" class="mpopup">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="close">&times;</span>
+        <h2>Downloads</h2>
+      </div>
+      <div class="modal-body">
+        <ul id="download-list" class="nobullets">
+          <!-- Download items will appear here -->
+        </ul>
+      </div>
+      <div class="modal-footer text-center">
+        <p>Yo wait man...</p>
+      </div>
+    </div>
+<script>
+// Brainrot Darkmode Toggle (robust, immer nach DOM geladen)
+document.addEventListener('DOMContentLoaded', function() {
+  var darkBtn = document.getElementById('darkmode-toggle');
+  if (darkBtn) {
+    darkBtn.addEventListener('click', function() {
+      document.body.classList.toggle('darkmode');
+      if(document.body.classList.contains('darkmode')) {
+        darkBtn.textContent = 'DARKMODE: ON';
+        darkBtn.style.background = '#2c003e';
+        darkBtn.style.color = '#fffb00';
+        darkBtn.style.border = '3px solid #fffb00';
+      } else {
+        darkBtn.textContent = 'DARKMODE: OFF';
+        darkBtn.style.background = '#fffb00';
+        darkBtn.style.color = '#ff00ff';
+        darkBtn.style.border = '3px solid #ff00ff';
+      }
+    });
+  }
+});
+</script>
+
+  </div>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
